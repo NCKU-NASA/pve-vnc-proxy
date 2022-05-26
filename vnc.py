@@ -25,6 +25,8 @@ with open('uservmlist.yaml', 'r') as f:
 def reloaddata():
     if os.path.isfile('.reload'):
         os.remove('.reload')
+        global nodedata
+        global uservmlist
         with open('nodes.yaml', 'r') as f:
             nodedata = yaml.load(f)
         with open('uservmlist.yaml', 'r') as f:
