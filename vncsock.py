@@ -1,5 +1,6 @@
 import socket
 import ssl
+import sys
 import requests
 import json
 import threading
@@ -118,7 +119,7 @@ def start():
                 api.connect(apiendpoint)
                 api.settimeout(None)
                 api.send(data)
-                print(data.decode('utf-8').splitlines()[0])
+                print(data.decode('utf-8').splitlines()[0], file=sys.stderr)
                 vncproxy=False
                 if 'vncproxy' in data.decode('utf-8'):
                     vncproxy = True

@@ -76,7 +76,7 @@ def showvm():
                 return Response("permission denied", 403, {})
             session['su'] = request.args['su']
             username = request.args['su']
-        else:
+        elif 'su' in session:
             del session['su']
 
     r = requests.request('POST', "https://" + nodedata[uservmlist[username]['node']]['endpoint'] + "/api2/json/access/ticket", data='username=' + nodedata[uservmlist[username]['node']]['username'] + '&password=' + nodedata[uservmlist[username]['node']]['password'], verify=False)
