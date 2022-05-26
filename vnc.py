@@ -39,6 +39,9 @@ def getsession():
     if 'username' not in data:
         return "fail"
 
+    if 'username' in session and session['username'] == data['username']:
+        return "success"
+
     session['username'] = data['username']
     return "success"
 
