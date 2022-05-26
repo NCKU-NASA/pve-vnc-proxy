@@ -115,7 +115,7 @@ done
 
 
 sudo cp pvevncproxy.service /etc/systemd/system/pvevncproxy.service
-sudo cp pvevncproxyapi.service /etc/systemd/system/pvevncproxy.service
+sudo cp pvevncproxyapi.service /etc/systemd/system/pvevncproxyapi.service
 
 cd /etc/pvevncproxy
 
@@ -137,5 +137,5 @@ echo ""
 echo ""
 echo "PVE VNC Proxy Service install.sh complete."
 echo "please request your certificate from ca (or you can just use self signed certificate and put your server certificate and server private key in /etc/pvevncproxy name to server.crt and server.key ."
-echo "Then you can use systemctl start pvevncproxy.service to start the service"
-echo "If you want to auto run on boot please type 'systemctl enable pvevncproxy.service'"
+echo "Then you can use systemctl start pvevncproxy.service and systemctl start pvevncproxyapi.service to start the service"
+echo "If you want to auto run on boot please type 'systemctl enable pvevncproxy.service' and 'systemctl enable pvevncproxyapi.service'"
