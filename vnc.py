@@ -35,9 +35,6 @@ def reload_data():
 
 @app.route('/session',methods=['POST'])
 def getsession():
-    if 'username' in session:
-        return "success"
-
     data = json.loads(request.data)
     if 'username' not in data:
         return "fail"
