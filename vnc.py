@@ -69,13 +69,22 @@ def showvm():
 @app.route('/novnc/app.js',methods=['GET'])
 def getapp():
     reloaddata()
-    with open('app.js', 'r') as f:
+    with open('app.' + request.args['ver'] + '.js', 'r') as f:
         data = f.read()
     return data
 
 @app.route('/novnc/package.json',methods=['GET'])
 def getpackage():
-    return '{ "version": "1.3.0-2" }'
+    reloaddata()
+    if session['username'] not in uservmlist:
+        return Response("permission denied", 403, {})
+
+    r = requests.request('GET', "https://" + nodedata[uservmlist[session['username']]['node']]['endpoint'] + "/novnc/package.json", verify=False)
+    excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
+    headers = [(name, value) for (name, value) in r.raw.headers.items() if name.lower() not in excluded_headers]
+    headers = dict(headers)
+    return Response(r.content.replace(nodedata[uservmlist[session['username']]['node']]['username'].encode('utf-8'), b''), r.status_code, headers)
+#    return '{ "version": "1.3.0-2" }'
 
 @app.route('/vm/api/status/<cmd>',methods=['GET','POST'])
 def getvmstatus(cmd):

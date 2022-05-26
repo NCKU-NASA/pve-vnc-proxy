@@ -10908,7 +10908,7 @@
         case "reset":
         case "suspend":
         case "resume":
-          confirmMsg = "Do you really want to " + cmd + " VM/CT {0}?";
+          confirmMsg = "Do you really want to " + cmd + " VM/CT?";
           break;
         case "reload":
           location.reload();
@@ -10916,7 +10916,6 @@
         default:
           throw "implement me " + cmd;
       }
-      confirmMsg = confirmMsg.replace("this vm");
       if (confirmMsg !== "" && confirm(confirmMsg) !== true) {
         return;
       }

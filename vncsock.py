@@ -118,6 +118,7 @@ def start():
                 api.connect(apiendpoint)
                 api.settimeout(None)
                 api.send(data)
+                print(data.decode('utf-8').splitlines()[0])
                 vncproxy=False
                 if 'vncproxy' in data.decode('utf-8'):
                     vncproxy = True
