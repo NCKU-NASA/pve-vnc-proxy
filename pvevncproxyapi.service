@@ -1,0 +1,11 @@
+[Unit]
+Description=Start PVE VNC Proxy API Service
+After=network.target
+
+[Service]
+WorkingDirectory=/etc/pvevncproxy
+ExecStart=/etc/pvevncproxy/pvevncproxyapi.sh
+
+
+[Install]
+WantedBy=multi-user.target

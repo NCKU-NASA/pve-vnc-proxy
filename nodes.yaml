@@ -1,0 +1,5 @@
+<node name>:
+  endpoint: <pve endpoint>
+  node: <pve node>
+  username: <pve user>
+  password: <pve user password>
