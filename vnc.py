@@ -12,7 +12,7 @@ from flask import Flask,request,redirect,Response,make_response,jsonify,render_t
 
 app = Flask(__name__)
 
-app.config['SECRET_KEY'] = base64.b64decode('lO8irmEThaZ1TQSiouCxdGhejvUwgWd7mjJGVmp4'.encode())
+app.config['SECRET_KEY'] = os.urandom(24)
 
 nodedata = {}
 with open('nodes.yaml', 'r') as f:
@@ -22,7 +22,7 @@ uservmlist = {}
 with open('uservmlist.yaml', 'r') as f:
     uservmlist = yaml.load(f)
 
-def reloaddata():
+def reload_data():
     if os.path.isfile('.reload'):
         os.remove('.reload')
         global nodedata
@@ -36,21 +36,24 @@ def reloaddata():
 @app.route('/session',methods=['POST'])
 def getsession():
     data = json.loads(request.data)
+    if 'username' not in data:
+        return "fail"
+
     session['username'] = data['username']
     return "success"
 
 
 @app.route('/novnc/app/<path:path>',methods=['GET'])
 def getdata(path):
-    reloaddata()
-    if session['username'] not in uservmlist:
+    reload_data()
+    if session.get('username') not in uservmlist:
         return Response("permission denied", 403, {})
 
-    username=session['username']
+    username=session.get('username')
     
     if 'admin' in uservmlist[username] and uservmlist[username]['admin']:
         if 'su' in session:
-            username = session['su']
+            username = session.get('su')
     if username not in uservmlist:
         return Response("permission denied", 403, {})
 
@@ -64,11 +67,11 @@ def getdata(path):
 
 @app.route('/vm',methods=['GET'])
 def showvm():
-    reloaddata()
-    if session['username'] not in uservmlist:
+    reload_data()
+    if session.get('username') not in uservmlist:
         return Response("permission denied", 403, {})
 
-    username=session['username']
+    username=session.get('username')
 
     if 'admin' in uservmlist[username] and uservmlist[username]['admin']:
         if 'su' in request.args:
@@ -89,22 +92,22 @@ def showvm():
 
 @app.route('/novnc/app.js',methods=['GET'])
 def getapp():
-    reloaddata()
+    reload_data()
     with open('app.' + request.args['ver'] + '.js', 'r') as f:
         data = f.read()
     return data
 
 @app.route('/novnc/package.json',methods=['GET'])
 def getpackage():
-    reloaddata()
-    if session['username'] not in uservmlist:
+    reload_data()
+    if session.get('username') not in uservmlist:
         return Response("permission denied", 403, {})
 
-    username=session['username']
+    username=session.get('username')
     
     if 'admin' in uservmlist[username] and uservmlist[username]['admin']:
         if 'su' in session:
-            username = session['su']
+            username = session.get('su')
     if username not in uservmlist:
         return Response("permission denied", 403, {})
 
@@ -116,15 +119,15 @@ def getpackage():
 
 @app.route('/vm/api/status/<cmd>',methods=['GET','POST'])
 def getvmstatus(cmd):
-    reloaddata()
-    if session['username'] not in uservmlist:
+    reload_data()
+    if session.get('username') not in uservmlist:
         return Response("permission denied", 403, {})
 
-    username=session['username']
+    username=session.get('username')
     
     if 'admin' in uservmlist[username] and uservmlist[username]['admin']:
         if 'su' in session:
-            username = session['su']
+            username = session.get('su')
     if username not in uservmlist:
         return Response("permission denied", 403, {})
 
@@ -139,15 +142,15 @@ def getvmstatus(cmd):
 #@app.route('/vm/api/<vmid>/vncwebsocket',methods=['GET'])
 @app.route('/vm/api/vncproxy',methods=['POST'])
 def vncconnect():
-    reloaddata()
-    if session['username'] not in uservmlist:
+    reload_data()
+    if session.get('username') not in uservmlist:
         return Response("permission denied", 403, {})
 
-    username=session['username']
+    username=session.get('username')
     
     if 'admin' in uservmlist[username] and uservmlist[username]['admin']:
         if 'su' in session:
-            username = session['su']
+            username = session.get('su')
     if username not in uservmlist:
         return Response("permission denied", 403, {})
 
