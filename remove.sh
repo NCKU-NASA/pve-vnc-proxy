@@ -8,10 +8,12 @@ sudo systemctl disable pvevncproxyapi.service
 sudo rm /etc/systemd/system/pvevncproxy.service
 sudo rm /etc/systemd/system/pvevncproxyapi.service
 
-for filename in requirements.txt vnc.py vncsock.py pvevncproxy.sh pvevncproxyapi.sh nodes.yaml uservmlist.yaml app.js .gitignore venv
+for filename in requirements.txt vnc.py vncsock.py pvevncproxy.sh pvevncproxyapi.sh nodes.yaml uservmlist.yaml .gitignore venv
 do
 	sudo rm -r /etc/pvevncproxy/$filename
 done
+
+sudo rm -r /etc/pvevncproxy/app.*.js
 
 sudo mv /etc/pvevncproxy/server.key .
 sudo mv /etc/pvevncproxy/server.crt .
