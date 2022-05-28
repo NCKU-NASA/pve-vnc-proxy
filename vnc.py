@@ -32,6 +32,57 @@ def reload_data():
         with open('uservmlist.yaml', 'r') as f:
             uservmlist = yaml.load(f)
 
+def getlogin(username):
+    r = requests.request('POST', "https://" + nodedata[uservmlist[username]['node']]['endpoint'] + "/api2/json/access/ticket", data='username=' + nodedata[uservmlist[username]['node']]['username'] + '&password=' + nodedata[uservmlist[username]['node']]['password'], verify=False)
+    return json.loads(r.content)
+
+def sendrequest(username, login, method, path, data=None, headers=None):
+    loginheader = None
+    if login != None:
+        loginheader = {'cookie':'PVEAuthCookie=' + login['data']['ticket'], 'CSRFPreventionToken':login['data']['CSRFPreventionToken']}
+        if headers != None:
+            loginheader = { **loginheader, **headers }
+    else:
+        if headers != None:
+            loginheader = headers
+
+    r = requests.request(method, "https://" + nodedata[uservmlist[username]['node']]['endpoint'] + path, headers=loginheader, data=data, verify=False)
+    
+    excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
+    reqheaders = [(name, value) for (name, value) in r.raw.headers.items() if name.lower() not in excluded_headers]
+    reqheaders = dict(reqheaders)
+    content = r.content.replace(nodedata[uservmlist[username]['node']]['username'].encode('utf-8'), b'')
+    if login != None:
+        content = content.replace(login['data']['CSRFPreventionToken'].encode('utf-8'), b'').replace(login['data']['ticket'].encode('utf-8'), b'')
+    response = Response(content, r.status_code, reqheaders)
+    return {'request':r,'response':response}
+
+def getusername(sufromsession):
+    reload_data()
+    if 'connect.sid' not in request.cookies:
+        session.clear()
+
+    if session.get('username') not in uservmlist:
+        return Response("permission denied", 403, {})
+    
+    username=session.get('username')
+    if 'admin' in uservmlist[username] and uservmlist[username]['admin']:
+        if sufromsession:
+            if 'su' in session:
+                username = session.get('su')
+        else:
+            if 'su' in request.args:
+                if request.args['su'] not in uservmlist:
+                    return Response("permission denied", 403, {})
+                session['su'] = request.args['su']
+                username = request.args['su']
+            elif 'su' in session:
+                del session['su']
+
+    if username not in uservmlist:
+        return Response("permission denied", 403, {})
+    return username
+
 
 @app.route('/session',methods=['POST'])
 def getsession():
@@ -45,53 +96,26 @@ def getsession():
     session['username'] = data['username']
     return "success"
 
-
 @app.route('/novnc/app/<path:path>',methods=['GET'])
 def getdata(path):
-    reload_data()
-    if session.get('username') not in uservmlist:
-        return Response("permission denied", 403, {})
+    username = getusername(True)
+    if type(username) == Response:
+        return username
 
-    username=session.get('username')
-    
-    if 'admin' in uservmlist[username] and uservmlist[username]['admin']:
-        if 'su' in session:
-            username = session.get('su')
-    if username not in uservmlist:
-        return Response("permission denied", 403, {})
-
-    r = requests.request('POST', "https://" + nodedata[uservmlist[username]['node']]['endpoint'] + "/api2/json/access/ticket", data='username=' + nodedata[uservmlist[username]['node']]['username'] + '&password=' + nodedata[uservmlist[username]['node']]['password'], verify=False)
-    login = json.loads(r.content)
-    r = requests.request('GET', "https://" + nodedata[uservmlist[username]['node']]['endpoint'] + "/novnc/app/" + path, headers={'cookie':'PVEAuthCookie=' + login['data']['ticket'], 'CSRFPreventionToken':login['data']['CSRFPreventionToken']}, verify=False)
-    excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
-    headers = [(name, value) for (name, value) in r.raw.headers.items() if name.lower() not in excluded_headers]
-    headers = dict(headers)
-    return Response(r.content.replace(nodedata[uservmlist[username]['node']]['username'].encode('utf-8'), b'').replace(login['data']['CSRFPreventionToken'].encode('utf-8'), b'').replace(login['data']['ticket'].encode('utf-8'), b''), r.status_code, headers)
+    login = getlogin(username)
+    r = sendrequest(username, login,'GET',"/novnc/app/" + path)
+    return r['response']
 
 @app.route('/vm',methods=['GET'])
 def showvm():
-    reload_data()
-    if session.get('username') not in uservmlist:
-        return Response("permission denied", 403, {})
+    username = getusername(False)
+    if type(username) == Response:
+        return username
 
-    username=session.get('username')
+    login = getlogin(username)
+    r = sendrequest(username, login,'GET',"/?console=kvm&vmid=" + uservmlist[username]['vmid'] + '&node=' + nodedata[uservmlist[username]['node']]['node'] + '&resize=scale&novnc=1')
+    return r['response']
 
-    if 'admin' in uservmlist[username] and uservmlist[username]['admin']:
-        if 'su' in request.args:
-            if request.args['su'] not in uservmlist:
-                return Response("permission denied", 403, {})
-            session['su'] = request.args['su']
-            username = request.args['su']
-        elif 'su' in session:
-            del session['su']
-
-    r = requests.request('POST', "https://" + nodedata[uservmlist[username]['node']]['endpoint'] + "/api2/json/access/ticket", data='username=' + nodedata[uservmlist[username]['node']]['username'] + '&password=' + nodedata[uservmlist[username]['node']]['password'], verify=False)
-    login = json.loads(r.content)
-    r = requests.request('GET', "https://" + nodedata[uservmlist[username]['node']]['endpoint'] + "/?console=kvm&vmid=" + uservmlist[username]['vmid'] + '&node=' + nodedata[uservmlist[username]['node']]['node'] + '&resize=scale&novnc=1', headers={'cookie':'PVEAuthCookie=' + login['data']['ticket'], 'CSRFPreventionToken':login['data']['CSRFPreventionToken']}, verify=False)
-    excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
-    headers = [(name, value) for (name, value) in r.raw.headers.items() if name.lower() not in excluded_headers]
-    headers = dict(headers)
-    return Response(r.content.replace(nodedata[uservmlist[username]['node']]['username'].encode('utf-8'), b'').replace(login['data']['CSRFPreventionToken'].encode('utf-8'), b'').replace(login['data']['ticket'].encode('utf-8'), b''), r.status_code, headers)
 
 @app.route('/novnc/app.js',methods=['GET'])
 def getapp():
@@ -102,67 +126,33 @@ def getapp():
 
 @app.route('/novnc/package.json',methods=['GET'])
 def getpackage():
-    reload_data()
-    if session.get('username') not in uservmlist:
-        return Response("permission denied", 403, {})
+    username = getusername(True)
+    if type(username) == Response:
+        return username
 
-    username=session.get('username')
-    
-    if 'admin' in uservmlist[username] and uservmlist[username]['admin']:
-        if 'su' in session:
-            username = session.get('su')
-    if username not in uservmlist:
-        return Response("permission denied", 403, {})
-
-    r = requests.request('GET', "https://" + nodedata[uservmlist[username]['node']]['endpoint'] + "/novnc/package.json", verify=False)
-    excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
-    headers = [(name, value) for (name, value) in r.raw.headers.items() if name.lower() not in excluded_headers]
-    headers = dict(headers)
-    return Response(r.content.replace(nodedata[uservmlist[username]['node']]['username'].encode('utf-8'), b''), r.status_code, headers)
+    r = sendrequest(username, None,'GET', "/novnc/package.json")
+    return r['response']
 
 @app.route('/vm/api/status/<cmd>',methods=['GET','POST'])
 def getvmstatus(cmd):
-    reload_data()
-    if session.get('username') not in uservmlist:
-        return Response("permission denied", 403, {})
+    username = getusername(False)
+    if type(username) == Response:
+        return username
 
-    username=session.get('username')
-    
-    if 'admin' in uservmlist[username] and uservmlist[username]['admin']:
-        if 'su' in session:
-            username = session.get('su')
-    if username not in uservmlist:
-        return Response("permission denied", 403, {})
+    login = getlogin(username)
+    r = sendrequest(username, login, request.method,"/api2/json/nodes/" + nodedata[uservmlist[username]['node']]['node'] + "/qemu/" + uservmlist[username]['vmid'] + "/status/" + cmd)
+    return r['response']
 
-    r = requests.request('POST', "https://" + nodedata[uservmlist[username]['node']]['endpoint'] + "/api2/json/access/ticket", data='username=' + nodedata[uservmlist[username]['node']]['username'] + '&password=' + nodedata[uservmlist[username]['node']]['password'], verify=False)
-    login = json.loads(r.content)
-    r = requests.request(request.method, "https://" + nodedata[uservmlist[username]['node']]['endpoint'] + "/api2/json/nodes/" + nodedata[uservmlist[username]['node']]['node'] + "/qemu/" + uservmlist[username]['vmid'] + "/status/" + cmd, headers={'cookie':'PVEAuthCookie=' + login['data']['ticket'], 'CSRFPreventionToken':login['data']['CSRFPreventionToken']}, verify=False)
-    excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
-    headers = [(name, value) for (name, value) in r.raw.headers.items() if name.lower() not in excluded_headers]
-    headers = dict(headers)
-    return Response(r.content, r.status_code, headers)
-
-#@app.route('/vm/api/<vmid>/vncwebsocket',methods=['GET'])
 @app.route('/vm/api/vncproxy',methods=['POST'])
 def vncconnect():
-    reload_data()
-    if session.get('username') not in uservmlist:
-        return Response("permission denied", 403, {})
+    username = getusername(True)
+    if type(username) == Response:
+        return username
 
-    username=session.get('username')
-    
-    if 'admin' in uservmlist[username] and uservmlist[username]['admin']:
-        if 'su' in session:
-            username = session.get('su')
-    if username not in uservmlist:
-        return Response("permission denied", 403, {})
-
-    r = requests.request('POST', "https://" + nodedata[uservmlist[username]['node']]['endpoint'] + "/api2/json/access/ticket", data='username=' + nodedata[uservmlist[username]['node']]['username'] + '&password=' + nodedata[uservmlist[username]['node']]['password'], verify=False)
-    login = json.loads(r.content)
-    r = requests.request('POST', "https://" + nodedata[uservmlist[username]['node']]['endpoint'] + "/api2/json/nodes/" + nodedata[uservmlist[username]['node']]['node'] + "/qemu/" + uservmlist[username]['vmid'] + "/vncproxy", headers={'cookie':'PVEAuthCookie=' + login['data']['ticket'], 'CSRFPreventionToken':login['data']['CSRFPreventionToken']}, data='websocket=1', verify=False)
-    return Response(json.dumps({'host':nodedata[uservmlist[username]['node']]['endpoint'],'nodes':nodedata[uservmlist[username]['node']]['node'],'vmid':uservmlist[username]['vmid'],'login':login,'vnc':json.loads(r.content)}), 200, {'Content-Type':'application/json;charset=UTF-8'})
+    login = getlogin(username)
+    r = sendrequest(username, login, 'POST', "/api2/json/nodes/" + nodedata[uservmlist[username]['node']]['node'] + "/qemu/" + uservmlist[username]['vmid'] + "/vncproxy", data='websocket=1')
+    return Response(json.dumps({'host':nodedata[uservmlist[username]['node']]['endpoint'],'nodes':nodedata[uservmlist[username]['node']]['node'],'vmid':uservmlist[username]['vmid'],'login':login,'vnc':json.loads(r['request'].content)}), 200, {'Content-Type':'application/json;charset=UTF-8'})
 
 
 if __name__ == "__main__":
-#    socketio.run(app, host="0.0.0.0", port=101)
     app.run(host="127.0.0.1", port=4001)

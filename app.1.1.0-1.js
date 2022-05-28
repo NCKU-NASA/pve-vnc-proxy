@@ -11001,6 +11001,7 @@
 
 	// app/pve.js
     function $$pve$$PVEUI(UI) {
+        this.su = $$webutil$$.getQueryVar('su');
         this.consoletype = $$webutil$$.getQueryVar('console');
         this.vmid = $$webutil$$.getQueryVar('vmid');
         this.vmname = $$webutil$$.getQueryVar('vmname');
@@ -11141,9 +11142,14 @@
 
         me.UI.closePVECommandPanel();
 
+        var arg = "";
+        if (me.su !== null)
+        {
+          arg = "?su=" + me.su;
+        }
         me.API2Request({
             params: params,
-            url: baseUrl + "/status/" + cmd,
+            url: baseUrl + "/status/" + cmd + arg,
             method: 'POST',
             failure: function(msg) {
             me.UI.showStatus(msg, 'warning');

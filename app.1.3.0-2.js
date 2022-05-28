@@ -10795,6 +10795,7 @@
   // app/pve.js
   function PVEUI(UI2) {
 	  
+    this.su = getQueryVar("su");
     this.consoletype = getQueryVar("console");
     this.vmid = getQueryVar("vmid");
     this.vmname = getQueryVar("vmname");
@@ -10920,9 +10921,14 @@
         return;
       }
       me.UI.closePVECommandPanel();
+      var arg = "";
+      if (me.su !== null)
+      {
+        arg = "?su=" + me.su;
+      }
       me.API2Request({
         params,
-        url: baseUrl + "/status/" + cmd,
+        url: baseUrl + "/status/" + cmd + arg,
         method: "POST",
         failure: function(msg) {
           me.UI.showStatus(msg, "warning");
@@ -11009,8 +11015,13 @@
     },
     pveStart: function(callback) {
       var me = this;
+      var arg = "";
+      if (me.su !== null)
+      {
+        arg = "?su=" + me.su;
+      }
         me.API2Request({
-          url: `${me.baseUrl}/status/current`,
+          url: `${me.baseUrl}/status/current` + arg,
           method: "GET",
           success: function(result) {
             let status = result.data.status;
