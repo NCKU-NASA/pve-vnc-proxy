@@ -102,7 +102,7 @@ set +e
 sudo mkdir /etc/pvevncproxy 2> /dev/null
 set -e
 
-for filename in requirements.txt vncsock.py vnc.py pvevncproxy.sh pvevncproxyapi.sh .gitignore
+for filename in requirements.txt vncsock.py vnc.py pvevncproxy.sh pvevncproxyapi.sh app .gitignore
 do
 	sudo cp -r $filename /etc/pvevncproxy/
 done
@@ -114,9 +114,6 @@ do
 	sudo cp -r $filename /etc/pvevncproxy/
     fi
 done
-
-
-sudo cp -r app.*.js  /etc/pvevncproxy/
 
 for filename in pvevncproxy.sh pvevncproxyapi.sh
 do

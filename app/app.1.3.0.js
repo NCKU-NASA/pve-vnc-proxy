@@ -10921,14 +10921,17 @@
         return;
       }
       me.UI.closePVECommandPanel();
-      var arg = "";
+      if (params === undefined)
+      {
+        params = {};
+      }
       if (me.su !== null)
       {
-        arg = "?su=" + me.su;
+          params.su = me.su;
       }
       me.API2Request({
-        params,
-        url: baseUrl + "/status/" + cmd + arg,
+        params: params,
+        url: baseUrl + "/status/" + cmd,
         method: "POST",
         failure: function(msg) {
           me.UI.showStatus(msg, "warning");
@@ -11016,11 +11019,13 @@
     pveStart: function(callback) {
       var me = this;
       var arg = "";
+      var params = {};
       if (me.su !== null)
       {
-        arg = "?su=" + me.su;
+          params.su = me.su;
       }
         me.API2Request({
+          params: params,
           url: `${me.baseUrl}/status/current` + arg,
           method: "GET",
           success: function(result) {

@@ -1,5 +1,6 @@
 <node name>:
   endpoint: <pve endpoint>
   node: <pve node>
+  app: <app.js file name in app/>
   username: <pve user>
   password: <pve user password>

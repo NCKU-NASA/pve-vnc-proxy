@@ -71,11 +71,16 @@ def getusername(sufromsession):
             if 'su' in session:
                 username = session.get('su')
         else:
-            if 'su' in request.args:
-                if request.args['su'] not in uservmlist:
+            args = {}
+            if request.method == 'GET':
+                args = request.args
+            elif request.method == 'POST':
+                args = request.form
+            if 'su' in args:
+                if args['su'] not in uservmlist:
                     return Response("permission denied", 403, {})
-                session['su'] = request.args['su']
-                username = request.args['su']
+                session['su'] = args['su']
+                username = args['su']
             elif 'su' in session:
                 del session['su']
 
@@ -119,8 +124,10 @@ def showvm():
 
 @app.route('/novnc/app.js',methods=['GET'])
 def getapp():
-    reload_data()
-    with open('app.' + request.args['ver'] + '.js', 'r') as f:
+    username = getusername(True)
+    if type(username) == Response:
+        return username
+    with open('app/' + nodedata[uservmlist[username]['node']]['app'], 'r') as f:
         data = f.read()
     return data
 

@@ -11142,14 +11142,17 @@
 
         me.UI.closePVECommandPanel();
 
-        var arg = "";
+        if (params === undefined)
+        {
+            params = {};
+        }
         if (me.su !== null)
         {
-          arg = "?su=" + me.su;
+            params.su = me.su;
         }
         me.API2Request({
             params: params,
-            url: baseUrl + "/status/" + cmd + arg,
+            url: baseUrl + "/status/" + cmd,
             method: 'POST',
             failure: function(msg) {
             me.UI.showStatus(msg, 'warning');
