@@ -105,6 +105,7 @@ def start():
 
                 pve = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 pve.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                pve.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
                 pve = ssl.wrap_socket(pve, ca_certs=None)
                 if ':' in apikey['host']:
                     pve.connect((apikey['host'].rsplit(":", 1)[0], int(apikey['host'].rsplit(":", 1)[1])))
