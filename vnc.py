@@ -33,13 +33,18 @@ def reload_data():
             uservmlist = yaml.load(f)
 
 def getlogin(username):
+    if 'token' in nodedata[uservmlist[username]['node']]:
+        return {'type':'token', 'data':nodedata[uservmlist[username]['node']]['username']+'='+nodedata[uservmlist[username]['node']]['token']}
     r = requests.request('POST', "https://" + nodedata[uservmlist[username]['node']]['endpoint'] + "/api2/json/access/ticket", data='username=' + nodedata[uservmlist[username]['node']]['username'] + '&password=' + nodedata[uservmlist[username]['node']]['password'], verify=False)
-    return json.loads(r.content)
+    return {**json.loads(r.content), **{'type':'password'}}
 
 def sendrequest(username, login, method, path, data=None, headers=None):
     loginheader = None
     if login != None:
-        loginheader = {'cookie':'PVEAuthCookie=' + login['data']['ticket'], 'CSRFPreventionToken':login['data']['CSRFPreventionToken']}
+        if login['type'] == 'password':
+            loginheader = {'cookie':'PVEAuthCookie=' + login['data']['ticket'], 'CSRFPreventionToken':login['data']['CSRFPreventionToken']}
+        elif login['type'] == 'token':
+            loginheader = {'Authorization': 'PVEAPIToken=' + login['data']}
         if headers != None:
             loginheader = { **loginheader, **headers }
     else:
@@ -53,7 +58,10 @@ def sendrequest(username, login, method, path, data=None, headers=None):
     reqheaders = dict(reqheaders)
     content = r.content.replace(nodedata[uservmlist[username]['node']]['username'].encode('utf-8'), b'')
     if login != None:
-        content = content.replace(login['data']['CSRFPreventionToken'].encode('utf-8'), b'').replace(login['data']['ticket'].encode('utf-8'), b'')
+        if login['type'] == 'password':
+            content = content.replace(login['data']['CSRFPreventionToken'].encode('utf-8'), b'').replace(login['data']['ticket'].encode('utf-8'), b'')
+        elif login['type'] == 'type':
+            content = content.replace(login['data'].encode('utf-8'), b'')
     response = Response(content, r.status_code, reqheaders)
     return {'request':r,'response':response}
 

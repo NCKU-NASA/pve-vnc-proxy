@@ -31,7 +31,8 @@ def startwebsuck(conn, pve):
             if len(data) == 0:
                 sessionon = False
             else:
-#                print(data.decode('utf-8'))
+                #print("aaa", file=sys.stderr)
+                #print(data, file=sys.stderr)
                 conn.settimeout(None)
                 conn.send(data)
                 data = b''
@@ -43,7 +44,8 @@ def startwebsuck(conn, pve):
             if len(data) == 0:
                 sessionon = False
             else:
-#                print(data.decode('utf-8'))
+                #print("bbb", file=sys.stderr)
+                #print(data, file=sys.stderr)
                 pve.settimeout(None)
                 pve.send(data)
                 data = b''
@@ -64,7 +66,7 @@ def start():
             data = conn.recv(8192)
             
             if "Upgrade: websocket" in data.decode('utf-8'):
-#            print(data.decode('utf-8'))
+                #print(data.decode('utf-8'), file=sys.stderr)
                 alldata = data.decode('utf-8').splitlines()
                 headers = {}
                 for i in range(len(alldata)):
@@ -87,8 +89,11 @@ def start():
                 headers['Origin'] = 'https://' + apikey['host']
                 headers['Host'] = apikey['host']
 #            headers['Cookie'] = 'PVEAuthCookie=' + urllib.parse.quote(apikey['login']['data']['ticket'])
-                headers['Cookie'] = 'PVEAuthCookie=' + apikey['login']['data']['ticket']
-                headers['CSRFPreventionToken'] = apikey['login']['data']['CSRFPreventionToken']
+                if apikey['login']['type'] == 'password':
+                    headers['Cookie'] = 'PVEAuthCookie=' + apikey['login']['data']['ticket']
+                    headers['CSRFPreventionToken'] = apikey['login']['data']['CSRFPreventionToken']
+                elif apikey['login']['type'] == 'token':
+                    headers['Authorization'] = 'PVEAPIToken=' + apikey['login']['data']
                 
                 data = ""
                 for a in headers['head']:
@@ -102,12 +107,15 @@ def start():
 #            data = "GET / HTTP/1.1\r\nHost: pve.ccns.io\r\nuser-agent: curl/7.74.0\r\naccept: */*\r\n\r\n"
 
                 #print(apikey['vnc']['data']['ticket'])
+                #print("begin", file=sys.stderr)
 
                 pve = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
                 pve.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 pve.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
                 pve = ssl.wrap_socket(pve, ca_certs=None)
                 if ':' in apikey['host']:
+                    #print("start", file=sys.stderr)
+                    #print(apikey['host'], file=sys.stderr)
                     pve.connect((apikey['host'].rsplit(":", 1)[0], int(apikey['host'].rsplit(":", 1)[1])))
                 else:
                     pve.connect((apikey['host'], 443))
