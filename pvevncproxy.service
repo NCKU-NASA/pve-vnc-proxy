@@ -1,11 +1,12 @@
 [Unit]
-Description=Start PVE VNC Proxy Service
+Description=Start NASA PVE VNC Proxy Service
 After=network.target
 
 [Service]
+User=nasa
+Group=nasa
 WorkingDirectory=/etc/pvevncproxy
-ExecStart=/etc/pvevncproxy/pvevncproxy.sh
-
+ExecStart=/usr/local/bin/pvevncproxy
 
 [Install]
 WantedBy=multi-user.target

@@ -1,8 +1,6 @@
-venv/*
-__pycache__/*
-server.crt
-server.key
-install-man-page.sh
-yq.1
-.DS_Store
-*/.DS_Store
+[Bb]in/
+*.bak
+.env
+*.db
+test.go
+*.swp

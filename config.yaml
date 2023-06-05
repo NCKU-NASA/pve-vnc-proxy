@@ -1,0 +1,27 @@
+Port: 5000
+BackendURL: https://sa.imslab.org
+SessionsName: connect.sid
+
+nodes:
+  <node name>:
+    endpoint: <pve endpoint>
+    node: <pve node>
+    app: <app.js file name in app/>
+    username: <pve user>
+    password: <pve user password(no token)>
+    token: <pve user token(no password)>
+
+vms:
+  <vmname>:
+    setuser: true
+    net:
+    - network4: 10.187.16.0/20
+      gw4: 10.187.31.254
+    searchdomain: sa
+    nameserver: 10.187.0.254
+
+users:
+  <username>:
+    <vmname>: 
+      node: <node>
+      vmid: <vmid>

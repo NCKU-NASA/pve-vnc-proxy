@@ -12023,6 +12023,8 @@
         }
       };
       var data = me.urlEncode(reqOpts.params || {});
+      if (me.su !== null) data.su = me.su;
+      if (me.vmname !== null) data.vmname = me.vmname;
       if (reqOpts.method === "GET") {
         xhr.open(reqOpts.method, "vm/api" + reqOpts.url + "?" + data);
       } else {
@@ -12067,14 +12069,7 @@
         return;
       }
       me.UI.closePVECommandPanel();
-      if (params === undefined)
-      {
-        params = {};
-      }
-      if (me.su !== null)
-      {
-          params.su = me.su;
-      }
+      if (params === undefined) params = {};
       me.API2Request({
         params,
         url: baseUrl + "/status/" + cmd,
@@ -12160,10 +12155,13 @@
         method: "POST",
         params: me.params,
         success: function(result) {
-          var wsparams = me.urlEncode({
+          var wsparamsobj = {
             port: result.data.port,
-            vncticket: result.data.ticket
-          });
+            vncticket: result.data.ticket,
+          };
+          if(me.su) wsparamsobj.su = me.su;
+          if(me.vmname) wsparamsobj.vmname = me.vmname;
+          var wsparams = me.urlEncode(wsparamsobj);
           document.getElementById("noVNC_password_input").value = result.data.ticket;
           me.UI.forceSetting("path", "vm/api" + me.baseUrl + "/vncwebsocket?" + wsparams);
           callback();
@@ -12175,15 +12173,10 @@
     },
     pveStart: function(callback) {
       var me = this;
-      var arg = "";
       var params = {};
-      if (me.su !== null)
-      {
-          params.su = me.su;
-      }
         me.API2Request({
           params: params,
-          url: `${me.baseUrl}/status/current` + arg,
+          url: `${me.baseUrl}/status/current`,
           method: "GET",
           success: function(result) {
             let status = result.data.status;
