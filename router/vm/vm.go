@@ -5,21 +5,16 @@ import (
     "fmt"
     "net/url"
     "net/http"
-//    "encoding/json"
 
     "github.com/gin-gonic/gin"
     "github.com/gorilla/websocket"
     "github.com/spf13/viper"
     "github.com/tidwall/gjson"
-//    "github.com/gin-contrib/sessions"
 
     "pve-vnc-proxy/middlewares/auth"
-//    "pve-vnc-proxy/middlewares/sessions"
-//    "pve-vnc-proxy/models/user"
+    "pve-vnc-proxy/middlewares/sessions"
     "pve-vnc-proxy/models/pve"
     "pve-vnc-proxy/utils/errutil"
-//    "pve-vnc-proxy/utils/password"
-//    "net/http"
 )
 
 var router *gin.RouterGroup
@@ -31,19 +26,14 @@ func Init(r *gin.RouterGroup) {
     router.POST("/api/status/:cmd", auth.SetNoVNCSession(false), auth.CheckSignIn, command)
     router.POST("/api/vncproxy", auth.SetNoVNCSession(false), auth.CheckSignIn, vncproxy)
     router.GET("/api/vncwebsocket", auth.SetNoVNCSession(false), auth.CheckSignIn, vncwebsocket)
-//    router.POST("/getuser", auth.CheckSignIn, auth.CheckIsAdmin, userinfo)
-//    router.GET("/test", auth.CheckSignIn, auth.CheckIsAdmin, test)
-//    router.POST("/test", auth.CheckSignIn, auth.CheckIsAdmin, test)
-//    router.GET("/getall", auth.CheckSignIn, auth.CheckIsAdmin, alluserinfo)
-//    router.POST("/login", login)
-//    router.POST("/add", auth.CheckSignIn, auth.CheckIsAdmin, adduser)
-//    router.GET("/logout", logout)
-//    router.GET("/issignin", issignin)
 }
 
 func showvm(c *gin.Context) {
+    session := sessions.Default(c)
     username, vmname := pve.LoginInfo(c)
-    pve.Config(c, username, vmname)
+    if session.Get("user.username").String() == username {
+        pve.Config(c, username, vmname)
+    }
     c.Data(pve.ShowVM(username, vmname))
 }
 
@@ -85,28 +75,6 @@ func vncwebsocket(c *gin.Context) {
     if err != nil {
         log.Panicln(err)
     }
-    //fmt.Println(ws.ReadMessage())
     pve.Tunnel(username, vmname, c.Request.URL.Query(), ws)
 }
 
-/*
-func test(c *gin.Context) {
-//    var data any
-    data := make(map[string]any)
-    err := c.ShouldBind(&data)
-    if err != nil {
-        data := make(map[string][]string)
-        fmt.Println(c.ShouldBind(&data))
-        fmt.Println(data)
-        c.JSON(200, data)
-        return
-    }
-    c.JSON(200, data)
-}
-func userinfo(c *gin.Context) {
-    postdata := make(map[string]any)
-    c.BindJSON(&postdata)
-    userdata := user.GetUser(c, postdata["username"].(string))
-    c.JSON(200, userdata)
-}
-*/
