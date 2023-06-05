@@ -12120,13 +12120,9 @@
         if (!el) {
           return;
         }
-        if (item[me.consoletype] === 1) {
-          el.onclick = function() {
-            me.pve_vm_command(item.cmd);
-          };
-        } else {
-          el.classList.add("pve_hidden");
-        }
+        el.onclick = function() {
+          me.pve_vm_command(item.cmd);
+        };
       });
     },
     getFBSize: function() {
