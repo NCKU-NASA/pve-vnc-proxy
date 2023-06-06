@@ -24,8 +24,8 @@ func SetNoVNCSession(fullreplace bool) gin.HandlerFunc {
     return func(c *gin.Context) {
         session := sessions.Default(c)
         data := make(map[string]any)
-        if !fullreplace {
-            for k, v := range session.Get("novnc").Map() {
+        for k, v := range session.Get("novnc").Map() {
+            if !fullreplace || k == "vmname" {
                 data[k] = v.String()
             }
         }
