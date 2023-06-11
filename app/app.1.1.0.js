@@ -11090,9 +11090,10 @@
             }
         }
 
-        var data = me.urlEncode(reqOpts.params || {});
-        if (me.su !== null) data.su = me.su;
-        if (me.vmname !== null) data.vmname = me.vmname;
+        var data = (reqOpts.params || {});
+        if (me.su) data.su = me.su;
+        if (me.vmname) data.vmname = me.vmname;
+        data = me.urlEncode(data);
 
         if (reqOpts.method === 'GET') {
             xhr.open(reqOpts.method, "vm/api" + reqOpts.url + '?' + data);
